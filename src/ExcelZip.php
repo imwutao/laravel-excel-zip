@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Chumper\Zipper\Zipper;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Excel;
+use Illuminate\Support\Str;
 
 class ExcelZip
 {
@@ -43,7 +44,7 @@ class ExcelZip
     public function __construct(Excel $excel)
     {
         $this->excel = $excel;
-        $this->folder = 'member_'.str_random(6);
+        $this->folder = 'member_'.Str::random(6);
     }
 
     /**
