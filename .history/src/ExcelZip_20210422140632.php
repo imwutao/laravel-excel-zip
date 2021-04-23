@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Chumper\Zipper\Zipper;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Excel;
+use Illuminate\Support\Str;
 
 class ExcelZip
 {
@@ -25,7 +26,6 @@ class ExcelZip
      * @var string
      */
     private $folder;
-    private $fileName;
 
     /**
      * excel export
@@ -44,6 +44,7 @@ class ExcelZip
     public function __construct(Excel $excel)
     {
         $this->excel = $excel;
+        $this->folder = 'member_'.Str::random(6);
     }
 
     /**
@@ -52,12 +53,9 @@ class ExcelZip
      * @param $export
      * @return $this
      */
-    public function setExport($export, $folder)
+    public function setExport($export)
     {
         $this->export = $export;
-        
-        $this->folder = $folder.'_'.date('YmdHis');
-        $this->fileName = $folder;
 
         return $this;
     }
@@ -72,12 +70,12 @@ class ExcelZip
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      */
-    public function excel(Collection $collection, $export = null)
+    public function excel(Collection $collection, string $fileName = null, $export = null)
     {
         $this->export = $export ?: $this->export;
-        $fileName = $this->fileName.'_'.$this->counter;
+        $fileName = $fileName ? $fileName.'_'.$this->counter : $this->counter;
 
-        $this->excel->store($this->export->setCollection($collection), config('excel_zip.excel_path')."{$this->folder}/$fileName.xlsx");
+        $this->excel->store($this->export->setCollection($collection), "{$this->folder}/$fileName.xlsx");
 
         $this->counter++;
 
@@ -94,7 +92,7 @@ class ExcelZip
     {
         $this->generateZip();
 
-        return $this->response(storage_path('app/'.config('excel_zip.zip_path'))."{$this->folder}.zip");
+        return $this->response(storage_path($this->folder.'.zip'));
     }
 
     /**
@@ -106,6 +104,21 @@ class ExcelZip
      * @throws \PhpOffice\PhpSpreadsheet\Writer\Exception
      * @throws \Exception
      */
+    public function download(Collection $collection, $export, string $fileName = 'download')
+    {
+        $chunk = config('excel_zip.chunk', 5000);
+
+        if (!config('excel_zip.always_zip', false) && $collection->count() < $chunk) {
+            return $this->excel->download($export->setCollection($collection), $fileName.'.xlsx')->deleteFileAfterSend(true);
+        }
+
+        foreach ($collection->chunk($chunk) as $key => $members) {
+            $this->excel->store($export->setCollection($members), "{$this->folder}/$fileName-$key.xlsx", 'local');
+        }
+
+        return $this->zip();
+    }
+
     /**
      * generate the zip file
      *
@@ -114,8 +127,8 @@ class ExcelZip
     private function generateZip()
     {
         $zipper = new Zipper();
-        
-        $zipper->make(storage_path('app/'.config('excel_zip.zip_path'))."{$this->folder}.zip")->add(glob(storage_path('app/'.config('excel_zip.excel_path')).$this->folder.'/*'));
+
+        $zipper->make(storage_path("{$this->folder}.zip"))->add(glob(storage_path("app/{$this->folder}").'/*'))->close();
 
         dispatch(new RemoveZip($this->folder))->delay(Carbon::now()->addMinute());
     }

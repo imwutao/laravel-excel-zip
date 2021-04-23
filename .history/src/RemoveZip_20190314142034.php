@@ -35,8 +35,8 @@ class RemoveZip implements ShouldQueue
      */
     public function handle()
     {
-        array_map('unlink', glob(storage_path('app/'.config('excel_zip.excel_path')).$this->folder."/*"));
+        array_map('unlink', glob(storage_path("app/$this->folder")."/*"));
 
-        rmdir(storage_path('app/'.config('excel_zip.excel_path')).$this->folder);
+        rmdir(storage_path("app/$this->folder"));
     }
 }

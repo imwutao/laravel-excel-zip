@@ -7,14 +7,10 @@ return [
      */
     'always_zip' => false,
 
-    'zip_path' => 'exports/',
-    
-    'excel_path' => 'exports/',
-
     /**
      * each excel data number
      */
-    'chunk' => 100000,
+    'chunk' => 5000,
 
     /**
      * Queue Driver Configuration.
