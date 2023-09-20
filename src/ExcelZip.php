@@ -52,12 +52,12 @@ class ExcelZip
      * @param $export
      * @return $this
      */
-    public function setExport($export, $folder)
+    public function setExport($export, $fileName, $folder)
     {
         $this->export = $export;
         
-        $this->folder = $folder.'_'.date('YmdHis');
-        $this->fileName = $folder;
+        $this->fileName = $fileName;
+        $this->folder = $folder;
 
         return $this;
     }
