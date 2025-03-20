@@ -77,7 +77,7 @@ class ExcelZip
         $this->export = $export ?: $this->export;
         $fileName = $this->fileName.'_'.$this->counter;
 
-        $this->excel->store($this->export->setCollection($collection), config('excel_zip.excel_path')."{$this->folder}/$fileName.xlsx");
+        $this->excel->store($this->export->setCollection($collection), config('excel_zip.excel_path')."{$this->folder}/$fileName.xlsx", 'local');
 
         $this->counter++;
 
